@@ -2,60 +2,202 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>My 音声合成エディタ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音声合成 & パラメーターエディタ</title>
     <style>
-        /* 簡単なデザイン（CSS） */
-        body { font-family: sans-serif; padding: 20px; background-color: #f5f6fa; }
-        .container { background: white; padding: 20px; border-radius: 8px; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .control-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="text"], input[type="range"] { width: 100%; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
-        audio { margin-top: 20px; width: 100%; }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        .slider-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .control-group {
+            flex: 1;
+            background: #f1f3f5;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-area {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+        #downloadButton {
+            display: none;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+        #downloadButton:hover {
+            background-color: #218838;
+        }
+        #statusText {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🎙️ 音声合成エディタ</h2>
-    
-    <div class="control-group">
-        <label>テキスト:</label>
-        <input type="text" id="textInput" value="これはHTMLで作ったGUIのテストです。">
-    </div>
-    
-    <div class="control-group">
-        <label>声の高さ (Pitch): <span id="pitchValue">1.0</span></label>
-        <input type="range" id="pitchSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('pitchValue').innerText=this.value">
+<div class="card">
+    <h1>音声合成 & パラメーターエディタ</h1>
+
+    <!-- テキスト入力 -->
+    <label for="textInput">読み上げテキスト:</label>
+    <textarea id="textInput" placeholder="ここに喋らせたい文章を入力してください...">こんにちは、音声合成のテストです。</textarea>
+
+    <!-- パラメーター調整スライダー群 -->
+    <div class="slider-row">
+        <!-- 声の高さ (ピッチ) -->
+        <div class="control-group">
+            <label>声の高さ: <span id="pitchValue">1.0</span></label>
+            <input type="range" id="pitchSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('pitchValue').innerText=this.value">
+        </div>
+
+        <!-- 声質 (フォルマント) -->
+        <div class="control-group">
+            <label>声質: <span id="formantValue">1.0</span></label>
+            <input type="range" id="formantSlider" min="0.6" max="1.4" step="0.05" value="1.0" oninput="document.getElementById('formantValue').innerText=this.value">
+        </div>
+
+        <!-- 話す速さ (スピード) -->
+        <div class="control-group">
+            <label>スピード: <span id="speedValue">1.0</span></label>
+            <input type="range" id="speedSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('speedValue').innerText=this.value">
+        </div>
     </div>
 
+    <!-- 合成実行ボタン -->
     <button onclick="generateAudio()">音声を合成する</button>
 
-    <audio id="audioPlayer" controls></audio>
+    <!-- 結果・再生エリア -->
+    <div class="result-area">
+        <p id="statusText"></p>
+        <audio id="audioPlayer" controls></audio>
+        <!-- WAVダウンロードボタン -->
+        <a id="downloadButton" href="#" download="my_voice.wav">💾 音声を保存 (WAV)</a>
+    </div>
 </div>
 
 <script>
     async function generateAudio() {
-        // 1. 画面の入力値を取得
         const text = document.getElementById("textInput").value;
         const pitch = document.getElementById("pitchSlider").value;
+        const formant = document.getElementById("formantSlider").value;
+        const speed = document.getElementById("speedSlider").value;
         
-        // 2. Pythonサーバーへデータを送信
-        const response = await fetch("/synthesize", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: text, pitch: pitch })
-        });
+        const statusText = document.getElementById("statusText");
+        const downloadBtn = document.getElementById("downloadButton");
+        
+        if (!text.trim()) {
+            alert("テキストを入力してください。");
+            return;
+        }
 
-        // 3. 帰ってきた音声ファイル（Blob）をプレーヤーにセット
-        if (response.ok) {
-            const blob = await response.blob();
-            const audioUrl = URL.createObjectURL(blob);
-            document.getElementById("audioPlayer").src = audioUrl;
-            document.getElementById("audioPlayer").play();
-        } else {
-            alert("音声の合成に失敗しました。");
+        statusText.innerText = "音声を作成中です（harvest処理中...）";
+        downloadBtn.style.display = "none";
+
+        try {
+            // サーバーへの合成リクエスト送信
+            const response = await fetch("/synthesize", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: text,
+                    pitch: pitch,
+                    formant: formant,
+                    speed: speed
+                })
+            });
+
+            if (response.ok) {
+                // 音声データの受信と再生設定
+                const blob = await response.blob();
+                const audioUrl = URL.createObjectURL(blob);
+                
+                const player = document.getElementById("audioPlayer");
+                player.src = audioUrl;
+                player.play();
+
+                // ダウンロードボタンの設定と表示
+                downloadBtn.href = audioUrl;
+                downloadBtn.style.display = "inline-block";
+
+                statusText.innerText = "合成完了！";
+            } else {
+                statusText.innerText = "エラーが発生しました。";
+                alert("音声の合成に失敗しました。");
+            }
+        } catch (error) {
+            console.error(error);
+            statusText.innerText = "通信エラーが発生しました。";
         }
     }
 </script>
